@@ -60,10 +60,8 @@ export default function svgHandler(selector: string): SvgHandler {
       .attr('stroke', 'white');
   };
   this.drawCircle = (circle: Circle) => {
-    const aCircle = d3.create('circle');
-
-    this.svgContainer.aCircle
-
+    this.svgContainer
+      .append('circle')
       .attr('cx', circle.cx)
       .attr('cy', circle.cy)
       .attr('r', circle.r)
