@@ -7,10 +7,11 @@ export type Edge = {
 export type GraphI = {
   getEdges(): Edge;
   addEdge(edgeStart: string, edgeEnd: string): void;
-  addVertex(vertexName: string): void;
+  addVertex(vertexName: string): string;
   vertexCount(): number;
   adjacent(vertex: string): string[];
   getAdjacentTo(vertex: string): string[];
+  checkEdgeExistance(edgeStart: string, edgeEnd: string): boolean;
 };
 
 export type GTraversal = {
@@ -37,6 +38,23 @@ export default function Graph(type: GraphType = 'both'): GraphI {
     getEdges() {
       return edges;
     },
+    checkEdgeExistance(edgeStart, edgeEnd) {
+      if (
+        edges.hasOwnProperty(edgeStart) &&
+        edges[edgeStart].includes(edgeEnd)
+      ) {
+        return true;
+      }
+      if (type === 'both') {
+        if (
+          edges.hasOwnProperty(edgeEnd) &&
+          edges[edgeEnd].includes(edgeStart)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    },
     addEdge(edgeStart: string, edgeEnd: string) {
       if (edges.hasOwnProperty(edgeStart) && Array.isArray(edges[edgeStart])) {
         if (!edges[edgeStart].includes(edgeEnd)) edges[edgeStart].push(edgeEnd);
@@ -60,6 +78,7 @@ export default function Graph(type: GraphType = 'both'): GraphI {
     addVertex(vertexName: string) {
       if (!edges.hasOwnProperty(vertexName)) {
         edges[vertexName] = [];
+        return vertexName;
       } else {
         throw Error(`the vertex ${vertexName} has
         already been added ${edges[vertexName]}`);

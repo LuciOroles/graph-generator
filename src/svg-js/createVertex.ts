@@ -1,6 +1,6 @@
 import PubSub from 'pubsub-js';
 import '@svgdotjs/svg.draggable.js';
-import { get } from 'lodash';
+import { GraphTopics } from '../Graph/Graph';
 
 /**
  * create a circle movable inside a drawing context
@@ -54,7 +54,6 @@ export const drawText = (draw: any, text: string, position: Coords) => {
 
 export default function createCircle(draw: any, circleConfig: CircleConfig) {
   const { startPos } = circleConfig;
-  console.log(startPos);
   // init
   var circle = draw
     .circle(circleConfig.radius * 2)
@@ -70,7 +69,6 @@ export const createNamedNode = (
   text: string,
   svgCoords: ClientRect
 ) => {
-  console.log(circleConfig);
   const nodeCircle = createCircle(draw, circleConfig);
   const { startPos } = circleConfig;
   const textPos = {
@@ -133,7 +131,6 @@ export const createEdgeConnector = (
   textElement.move(position.x, position.y);
 
   textElement.on('click', (evt: MouseEvent) => {
-    console.log(evt);
     const coords = {
       x: evt.clientX,
       y: evt.clientY,
@@ -143,6 +140,10 @@ export const createEdgeConnector = (
     textElement.fill(state.isActive ? state.colors.red : state.colors.black);
 
     PubSub.publish('addEdgeTo', data);
+    PubSub.subscribe(GraphTopics.addEdge, (msg: string, data: any) => {
+      state.isActive = false;
+      textElement.fill(state.colors.black);
+    });
   });
 
   return textElement;

@@ -64,7 +64,6 @@ export default function render() {
   });
 
   PubSub.subscribe('addEdgeTo', (msg: string, data: EndOfEdge) => {
-    console.log('data ', data);
     const { top, left } = document
       .getElementById('canvas')
       .getBoundingClientRect();
@@ -76,28 +75,19 @@ export default function render() {
 
     edgeTo.addEventListener('keypress', (ev: KeyboardEvent) => {
       const { key } = ev;
+      const { value: endEdge } = edgeTo;
       if (key === 'Enter') {
         document.getElementById('canvas').removeChild(edgeTo);
-        PubSub.publish('removeEdgeInput', {
-          node: ev.target,
-          endEdge: edgeTo.value,
-        });
+        if (endEdge.length !== 0) {
+          debugger;
+          PubSub.publish(GraphTopics.addEdge, {
+            edgeStart: data.label,
+            edgeEnd: endEdge,
+          });
+        }
       }
     });
 
     document.getElementById('canvas').appendChild(edgeTo);
-
-    type EdgeToNode = {
-      node: HTMLElement;
-      endEdge: string;
-    };
-    PubSub.subscribe('removeEdgeInput', (msg: string, edgeTo: EdgeToNode) => {
-      if (edgeTo.endEdge.length !== 0) {
-        PubSub.publish(GraphTopics.addEdge, {
-          edgeStart: data.label,
-          edgeEnd: edgeTo.endEdge,
-        });
-      }
-    });
   });
 }

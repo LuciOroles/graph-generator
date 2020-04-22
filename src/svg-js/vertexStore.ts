@@ -67,7 +67,6 @@ export default function vertexStore(draw: any): VertexStore {
     drawEdge(startEdge: Edge, endEdge: Edge) {
       const painter = withEdge(draw, [startEdge.coords, endEdge.coords]);
       const edges = [startEdge.name, endEdge.name];
-      console.log('drawing edge ', [startEdge.coords, endEdge.coords]);
 
       painter.draw();
       this.drawnEdges.push(edges);

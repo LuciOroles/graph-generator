@@ -49,7 +49,6 @@ export default function () {
     CoordChange,
     (msg: string, data: { coords: Coords; label: string }) => {
       const { coords, label } = data;
-      console.log('subscribe to coords ', data, ' label ', label);
       vStore.updateVertex(label, coords);
       // update lines connected to vertex
       vStore.drawnSegments.forEach((segment) => {
@@ -69,10 +68,14 @@ export default function () {
   );
   const appendNodeHandler = (msg: string, data: Vertex) => {
     const { name: newVertexName } = vStore.addVertex(data.name, data.coords);
-    const { x, y } = data.coords;
-    createNamedNode(draw, circleConfig(7, x, y), newVertexName, svgCoords);
-
-    graph.addVertex(newVertexName);
+    try {
+      if (graph.addVertex(newVertexName)) {
+        const { x, y } = data.coords;
+        createNamedNode(draw, circleConfig(7, x, y), newVertexName, svgCoords);
+      }
+    } catch (error) {
+      console.warn(error);
+    }
   };
 
   PubSub.subscribe(GraphTopics.addVertex, appendNodeHandler);
@@ -86,20 +89,26 @@ export default function () {
         edgeEnd: string;
       }
     ) => {
-      const { edgeEnd, edgeStart } = data;
+      const { edgeStart, edgeEnd } = data;
       const vStart = vStore.getCoords(edgeStart);
       const vEnd = vStore.getCoords(edgeEnd);
 
-      // graphic draw
-      vStore.drawEdge(
-        { name: edgeStart, coords: vStart },
-        {
-          name: edgeEnd,
-          coords: vEnd,
-        }
-      );
+      console.log(edgeStart, edgeEnd);
 
-      graph.addEdge(edgeStart, edgeEnd);
+      // prevent re-adding segments
+      if (!graph.checkEdgeExistance(edgeStart, edgeEnd)) {
+        vStore.drawEdge(
+          { name: edgeStart, coords: vStart },
+          {
+            name: edgeEnd,
+            coords: vEnd,
+          }
+        );
+
+        graph.addEdge(edgeStart, edgeEnd);
+      } else {
+        alert(`[${edgeStart}, ${edgeEnd}] already exists`);
+      }
     }
   );
 
