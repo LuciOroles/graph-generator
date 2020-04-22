@@ -70,8 +70,8 @@ export default function render() {
       .getBoundingClientRect();
     const { x, y } = data.coords;
     const edgeTo = textInputCreator({
-      x: x - left,
-      y: y - top,
+      x: x - left + 10,
+      y: y - top - 10,
     });
 
     edgeTo.addEventListener('keypress', (ev: KeyboardEvent) => {

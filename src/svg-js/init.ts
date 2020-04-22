@@ -87,10 +87,10 @@ export default function () {
       }
     ) => {
       const { edgeEnd, edgeStart } = data;
-
-      console.log(`connecting ${edgeStart} to ${edgeEnd}`);
       const vStart = vStore.getCoords(edgeStart);
       const vEnd = vStore.getCoords(edgeEnd);
+
+      // graphic draw
       vStore.drawEdge(
         { name: edgeStart, coords: vStart },
         {
@@ -98,6 +98,8 @@ export default function () {
           coords: vEnd,
         }
       );
+
+      graph.addEdge(edgeStart, edgeEnd);
     }
   );
 
