@@ -1,99 +1,105 @@
+import PubSub from 'pubsub-js';
 import { SVG } from '@svgdotjs/svg.js';
-import { createNamedNode, Coords } from './createVertex';
-import withEdge, { groupInPairs, Points } from './withEdge';
 
-type Vertex = {
-  name: string;
-  coords: {
-    x: number;
-    y: number;
-  };
+import { createNamedNode, Coords, CoordChange } from './createVertex';
+import Graph, { GraphI, GraphTopics } from '../Graph/Graph';
+import vertexStore from './vertexStore';
+import circleConfig from './circleConfig';
+
+import render from './render';
+
+declare global {
+  interface Window {
+    vertexStore: any;
+    graph: GraphI;
+  }
+}
+
+export type CartesianCoords = {
+  x: number;
+  y: number;
 };
 
-type VertexStore = {
-  current: number;
-  vertices: Vertex[];
-  addVertex(): void;
-  updateVertex(index: number, coords: Coords): void;
-  getCoords(index: number): [number, number];
+export type Vertex = {
+  name: string;
+  coords: CartesianCoords;
+};
+
+export type Segment = {
+  line: any;
+  edges: [string, string];
+  coords: {
+    startEdge: [number, number];
+    endEdge: [number, number];
+  };
 };
 
 export default function () {
-  var appendNode = document.createElement('button');
-  const stateLog = document.createElement('div');
-
   var draw = SVG().addTo('#canvas').size(600, 400);
-
-  var vertexStore: VertexStore = {
-    current: 0,
-    vertices: [],
-    addVertex() {
-      this.vertices.push({
-        name: 'N' + this.current,
-        coords: {
-          x: 0,
-          y: 0,
-        },
-      });
-    },
-    updateVertex(index: number, coords: Coords) {
-      this.vertices[index].coords = coords;
-      // temp to check coors
-      const vertexCoords = this.vertices.map((vertex: Vertex, i: number) =>
-        this.getCoords(i)
-      );
-
-      groupInPairs(vertexCoords).forEach((points: Points) => {
-        if (points.length > 1) withEdge(draw, points).draw();
-      });
-
-      stateLog.innerText =
-        JSON.stringify(vertexCoords) +
-        ' || ' +
-        JSON.stringify(groupInPairs(vertexCoords));
-      // segements drawned --> segements to update
-    },
-    getCoords(index: number): [number, number] {
-      const { x, y } = this.vertices[index].coords;
-
-      return [x, y];
-    },
-  };
-
-  appendNode.setAttribute('type', 'button');
-  appendNode.innerText = 'Add Node';
-
-  appendNode.addEventListener('click', (_evt) => {
-    const { current } = vertexStore;
-    const coordsChange = (newCoords: Coords) => {
-      vertexStore.updateVertex(current, newCoords);
-    };
-    createNamedNode(
-      draw,
-      blueNodeFactory(20, 100),
-      'N' + current,
-      svgCoords,
-      coordsChange
-    );
-    vertexStore.addVertex();
-    vertexStore.current += 1;
-  });
-
   const svgCoords: ClientRect = document
     .getElementsByTagName('svg')[0]
     .getBoundingClientRect();
 
-  const blueNodeFactory = (x: number, y: number) => {
-    return {
-      radius: 20,
-      color: '#0095ff',
-      startPos: {
-        x,
-        y,
-      },
-    };
+  var graph: GraphI = Graph('both');
+  const vStore = vertexStore(draw);
+  window.vertexStore = vStore;
+  window.graph = graph;
+
+  PubSub.subscribe(
+    CoordChange,
+    (msg: string, data: { coords: Coords; label: string }) => {
+      const { coords, label } = data;
+      console.log('subscribe to coords ', data, ' label ', label);
+      vStore.updateVertex(label, coords);
+      // update lines connected to vertex
+      vStore.drawnSegments.forEach((segment) => {
+        const { line, edges, coords } = segment;
+
+        if (edges.includes(label)) {
+          if (edges.indexOf(label) === 0) {
+            coords.startEdge = vStore.getCoords(label);
+          }
+          if (edges.indexOf(label) === 1) {
+            coords.endEdge = vStore.getCoords(label);
+          }
+          line.plot([coords.startEdge, coords.endEdge]);
+        }
+      });
+    }
+  );
+  const appendNodeHandler = (msg: string, data: Vertex) => {
+    const { name: newVertexName } = vStore.addVertex(data.name, data.coords);
+    const { x, y } = data.coords;
+    createNamedNode(draw, circleConfig(7, x, y), newVertexName, svgCoords);
+
+    graph.addVertex(newVertexName);
   };
 
-  document.getElementById('content').appendChild(appendNode);
-  document.getElementById('content').appendChild(stateLog);
+  PubSub.subscribe(GraphTopics.addVertex, appendNodeHandler);
+
+  PubSub.subscribe(
+    GraphTopics.addEdge,
+    (
+      msg: string,
+      data: {
+        edgeStart: string;
+        edgeEnd: string;
+      }
+    ) => {
+      const { edgeEnd, edgeStart } = data;
+
+      console.log(`connecting ${edgeStart} to ${edgeEnd}`);
+      const vStart = vStore.getCoords(edgeStart);
+      const vEnd = vStore.getCoords(edgeEnd);
+      vStore.drawEdge(
+        { name: edgeStart, coords: vStart },
+        {
+          name: edgeEnd,
+          coords: vEnd,
+        }
+      );
+    }
+  );
+
+  render();
 }

@@ -42,11 +42,14 @@
     "webpack-dev-server": "3.1.4"
   },
   "dependencies": {
+    "@svgdotjs/svg.draggable.js": "^3.0.2",
     "@svgdotjs/svg.js": "^3.0.16",
     "@types/d3": "^5.7.2",
     "@types/lodash": "^4.14.149",
+    "@types/pubsub-js": "^1.5.18",
     "d3": "^5.15.1",
     "d3-drag": "^1.2.5",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "pubsub-js": "^1.8.0"
   }
 }

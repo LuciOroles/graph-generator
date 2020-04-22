@@ -1,3 +1,5 @@
+import PubSub from 'pubsub-js';
+import '@svgdotjs/svg.draggable.js';
 import { get } from 'lodash';
 
 /**
@@ -6,6 +8,8 @@ import { get } from 'lodash';
  * @param {CircleConfig} circleConfig
  * @param {ClientRect} svgCoords
  */
+
+export const CoordChange = Symbol('CoordChange');
 
 export type Coords = {
   x: number;
@@ -18,34 +22,10 @@ type CircleConfig = {
   startPos: Coords;
 };
 
-export const drawText = (
-  draw: any,
-  text: string,
-  position: { x: number; y: number }
-) => {
-  const textElement = draw.text(text);
-  textElement.fill('#fff');
-  textElement.build(true);
-  textElement.font({
-    family: 'Helvetica',
-    size: 24,
-  });
-  textElement.addClass('graph-text');
-  textElement.move(position.x, position.y);
-
-  return textElement;
+export type EndOfEdge = {
+  label: string;
+  coords: Coords;
 };
-
-export default function createCircle(draw: any, circleConfig: CircleConfig) {
-  const { startPos } = circleConfig;
-  // init
-  var circle = draw
-    .circle(circleConfig.radius * 2)
-    .attr({ fill: circleConfig.color });
-  circle.move(startPos.x, startPos.y);
-
-  return circle;
-}
 
 const inConstrains = (svgCoords: ClientRect, evt: MouseEvent, gap: number) => {
   const { clientX, clientY } = evt;
@@ -58,62 +38,112 @@ const inConstrains = (svgCoords: ClientRect, evt: MouseEvent, gap: number) => {
   return false;
 };
 
-// dragging
-export const dragElement = (
-  element: any,
-  svgCoords: ClientRect,
-  radius: number,
-  onCoordsChange: (newCoords: Coords) => void
-): any => {
-  const movingElement = (evt: MouseEvent) => {
-    const { clientX, clientY } = evt;
+export const drawText = (draw: any, text: string, position: Coords) => {
+  const textElement = draw.text(text);
+  textElement.fill('#000');
 
-    if (inConstrains(svgCoords, evt, radius + 10)) {
-      element.move(
-        clientX - svgCoords.left - radius,
-        clientY - svgCoords.top - radius
-      );
-    } else {
-      // drop element from mouse down as cursor is out
-      element.off('mousemove');
-    }
-  };
-
-  element.on('mousedown', () => {
-    element.on('mousemove', movingElement);
+  textElement.font({
+    family: 'Helvetica',
+    size: 18,
   });
+  textElement.addClass('graph-text');
+  textElement.move(position.x, position.y);
 
-  element.on(['mouseup'], () => {
-    const coords: Coords = {
-      x: get(element, 'node.firstChild.cx.baseVal.value', null),
-      y: get(element, 'node.firstChild.cy.baseVal.value', null),
-    };
-    console.log(coords);
-    onCoordsChange(coords);
-    element.off('mousemove');
-  });
+  return textElement;
 };
+
+export default function createCircle(draw: any, circleConfig: CircleConfig) {
+  const { startPos } = circleConfig;
+  console.log(startPos);
+  // init
+  var circle = draw
+    .circle(circleConfig.radius * 2)
+    .attr({ fill: circleConfig.color });
+  circle.move(startPos.x, startPos.y);
+
+  return circle;
+}
 
 export const createNamedNode = (
   draw: any,
   circleConfig: CircleConfig,
   text: string,
-  svgCoords: ClientRect,
-  onCoordsChange: (newCords: Coords) => void
+  svgCoords: ClientRect
 ) => {
+  console.log(circleConfig);
   const nodeCircle = createCircle(draw, circleConfig);
   const { startPos } = circleConfig;
   const textPos = {
-    x: startPos.x + 5,
-    y: startPos.y + 7,
+    x: startPos.x + 20,
+    y: startPos.y + 10,
   };
+  const addEdgePosition = {
+    x: startPos.x + 20,
+    y: startPos.y - 20,
+  };
+
   const nodeText = drawText(draw, text, textPos);
 
   const node = draw.group();
   node.addClass('graph-point');
-  node.add(nodeCircle).add(nodeText);
+  node.attr('cursor', 'pointer');
+  node.attr('fill-opacity', '0.5');
 
-  dragElement(node, svgCoords, 20, onCoordsChange);
+  const addEdge = createEdgeConnector(draw, addEdgePosition, text);
 
+  node.add(nodeText).add(nodeCircle).add(addEdge);
+  node.draggable();
+  node.on('dragend', function (evt: MouseEvent) {
+    const { target } = evt;
+
+    if (target) {
+      const circle = (<HTMLElement>target).getElementsByTagName('circle')[0];
+      const x = parseInt(circle.getAttribute('cx'), 10);
+      const y = parseInt(circle.getAttribute('cy'), 10);
+      const coords = { x, y };
+      const data = { coords, label: text };
+      PubSub.publish(CoordChange, data);
+    }
+  });
   return node;
+};
+
+export const createEdgeConnector = (
+  draw: any,
+  position: Coords,
+  label: string
+) => {
+  const ADD = '+';
+  const state = {
+    isActive: false,
+    colors: {
+      black: '#000',
+      red: 'red',
+    },
+  };
+
+  const textElement = draw.text(ADD);
+  textElement.fill();
+
+  textElement.font({
+    family: 'Helvetica',
+    size: 22,
+  });
+  textElement.addClass('graph-text');
+  textElement.move(position.x, position.y);
+
+  textElement.on('click', (evt: MouseEvent) => {
+    console.log(evt);
+    const coords = {
+      x: evt.clientX,
+      y: evt.clientY,
+    };
+    const data = { label, coords };
+    state.isActive = !state.isActive;
+    textElement.fill(state.isActive ? state.colors.red : state.colors.black);
+
+    PubSub.publish('addEdgeTo', data);
+  });
+
+  return textElement;
 };

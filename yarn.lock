@@ -1015,7 +1015,14 @@
   dependencies:
     type-detect "4.0.8"
 
-"@svgdotjs/svg.js@^3.0.16":
+"@svgdotjs/svg.draggable.js@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@svgdotjs/svg.draggable.js/-/svg.draggable.js-3.0.2.tgz#a8d935ce495a40ab575e8bc11406ae61ebb4f455"
+  integrity sha512-yqCJe/w1q3IK51zRiqB42rsvQHyX5oqg/Eck02TDRhRv+pQ7sSHJfdyljiGkqoFW4i/1sIpnqYmiLDeM12Nhsw==
+  dependencies:
+    "@svgdotjs/svg.js" "^3.0.10"
+
+"@svgdotjs/svg.js@^3.0.10", "@svgdotjs/svg.js@^3.0.16":
   version "3.0.16"
   resolved "https://registry.yarnpkg.com/@svgdotjs/svg.js/-/svg.js-3.0.16.tgz#7044754e45daf62c8e2b115c45ca33ca5b967aff"
   integrity sha512-yZ4jfP/SeLHEnCi9PIrzienKCrA4vW9+jm5uUV3N5DG2e9zgXLY5FgywK2u8/gMFIeKO0HuqTLFFfWJj+MfMLA==
@@ -1326,6 +1333,11 @@
   version "1.19.1"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-1.19.1.tgz#33509849f8e679e4add158959fdb086440e9553f"
   integrity sha512-5qOlnZscTn4xxM5MeGXAMOsIOIKIbh9e85zJWfBRVPlRMEVawzoPhINYbRGkBZCI8LxvBe7tJCdWiarA99OZfQ==
+
+"@types/pubsub-js@^1.5.18":
+  version "1.5.18"
+  resolved "https://registry.yarnpkg.com/@types/pubsub-js/-/pubsub-js-1.5.18.tgz#dd12284c5e93b39874e62675702bf50c6f55e9ec"
+  integrity sha512-1xFx7o/DKwbDm5UwjnkkeAVk+U1puh0odDkY+NpTCuQfbhcGh4+fjQSuKVHLPP1F9osj3/lDtnr71kud9u3ZYA==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -7026,6 +7038,11 @@ public-encrypt@^4.0.0:
     parse-asn1 "^5.0.0"
     randombytes "^2.0.1"
     safe-buffer "^5.1.2"
+
+pubsub-js@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/pubsub-js/-/pubsub-js-1.8.0.tgz#e2b523a030140a3d6e080735a48850a9622ed20a"
+  integrity sha512-z/61CZMA+jaQpBU0QSWkC4w6lX3tPbOdtl1h2UWac4sn6dkWfx7ND75SsN6U0amczdI66PqfuXXD0Ad7tnbaQg==
 
 pump@^2.0.0, pump@^2.0.1:
   version "2.0.1"

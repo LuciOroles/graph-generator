@@ -1,0 +1,6 @@
+ 1. add + button to each text
+ 2. coord change trigger, unnecearly on click
+ 3. add drag event on circle, apply move on group
+ 4. drag issue => too fast drop   
+ 5. big issue draggin with group => rework to drang and drop rect
+ 5. onClick handler for plus
